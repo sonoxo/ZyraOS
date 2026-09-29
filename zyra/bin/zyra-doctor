@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -u
+
+PASS=0
+WARN=0
+FAIL=0
+
+ok()   { printf '✅ %s\n' "$*"; PASS=$((PASS + 1)); }
+warn() { printf '⚠️  %s\n' "$*"; WARN=$((WARN + 1)); }
+bad()  { printf '❌ %s\n' "$*"; FAIL=$((FAIL + 1)); }
+
+printf '🧠 ZYRAOS // CAPABILITY DOCTOR\n'
+printf '%s\n' '--------------------------------'
+
+if command -v openshell >/dev/null 2>&1; then
+  ok "openshell found: $(command -v openshell)"
+else
+  bad "openshell is not installed or not on PATH"
+fi
+
+if command -v git >/dev/null 2>&1; then
+  ok "git found: $(git --version 2>/dev/null || true)"
+else
+  bad "git is required"
+fi
+
+if command -v docker >/dev/null 2>&1; then
+  if docker info >/dev/null 2>&1; then
+    ok "Docker engine reachable"
+  else
+    warn "Docker CLI exists but engine is not reachable"
+  fi
+elif command -v podman >/dev/null 2>&1; then
+  if podman info >/dev/null 2>&1; then
+    ok "Podman engine reachable"
+  else
+    warn "Podman CLI exists but engine is not reachable"
+  fi
+else
+  warn "No local Docker or Podman CLI detected; a remote/VM/Kubernetes gateway may still work"
+fi
+
+if command -v openshell >/dev/null 2>&1; then
+  STATUS_FILE="/tmp/zyra-openshell-status.$$"
+  if openshell status >"$STATUS_FILE" 2>&1; then
+    ok "OpenShell gateway status succeeded"
+    sed 's/^/   /' "$STATUS_FILE"
+  else
+    warn "OpenShell CLI is installed but no healthy selected gateway was confirmed"
+    sed 's/^/   /' "$STATUS_FILE" 2>/dev/null || true
+  fi
+  rm -f "$STATUS_FILE"
+
+  WHOAMI_FILE="/tmp/zyra-openshell-whoami.$$"
+  if openshell whoami --output json >"$WHOAMI_FILE" 2>/dev/null; then
+    ok "Gateway identity check succeeded"
+  else
+    warn "Gateway identity was not confirmed; protected operations may require authentication"
+  fi
+  rm -f "$WHOAMI_FILE"
+fi
+
+if [ -f zyra/policy.dev.yaml ]; then
+  ok "ZyraOS development policy present"
+else
+  bad "zyra/policy.dev.yaml missing; run from the ZyraOS repository root"
+fi
+
+if [ -f zyra/capabilities.yaml ]; then
+  ok "Capability manifest present"
+else
+  bad "zyra/capabilities.yaml missing"
+fi
+
+if command -v nvidia-smi >/dev/null 2>&1; then
+  ok "NVIDIA GPU tooling detected"
+else
+  warn "nvidia-smi not detected locally; GPU use may still be available on a remote gateway"
+fi
+
+printf '%s\n' '--------------------------------'
+printf 'PASS=%d WARN=%d FAIL=%d\n' "$PASS" "$WARN" "$FAIL"
+
+if [ "$FAIL" -gt 0 ]; then
+  exit 1
+fi
+exit 0
