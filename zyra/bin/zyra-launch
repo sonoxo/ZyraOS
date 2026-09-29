@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+POLICY="${ZYRA_POLICY:-$ROOT/zyra/policy.dev.yaml}"
+SANDBOX="${ZYRA_SANDBOX:-zyra-dev}"
+UPLOAD="${ZYRA_UPLOAD:-$ROOT}"
+WORKDIR="${ZYRA_WORKDIR:-/workspace}"
+IMAGE="${ZYRA_IMAGE:-}"
+CPU="${ZYRA_CPU:-}"
+MEMORY="${ZYRA_MEMORY:-}"
+GPU="${ZYRA_GPU:-}"
+PROVIDERS="${ZYRA_PROVIDERS:-}"
+
+if ! command -v openshell >/dev/null 2>&1; then
+  printf '❌ openshell is not on PATH\n' >&2
+  exit 127
+fi
+
+if [ ! -f "$POLICY" ]; then
+  printf '❌ policy not found: %s\n' "$POLICY" >&2
+  exit 2
+fi
+
+args=(sandbox create
+  --name "$SANDBOX"
+  --policy "$POLICY"
+  --upload "$UPLOAD:$WORKDIR"
+  --label project=zyraos
+  --label capability=development
+)
+
+if [ -n "$IMAGE" ]; then args+=(--from "$IMAGE"); fi
+if [ -n "$CPU" ]; then args+=(--cpu "$CPU"); fi
+if [ -n "$MEMORY" ]; then args+=(--memory "$MEMORY"); fi
+if [ -n "$GPU" ]; then args+=(--gpu "$GPU"); fi
+
+if [ -n "$PROVIDERS" ]; then
+  old_ifs="$IFS"
+  IFS=','
+  for provider in $PROVIDERS; do
+    [ -n "$provider" ] && args+=(--provider "$provider")
+  done
+  IFS="$old_ifs"
+fi
+
+printf '🚀 ZYRAOS // LAUNCH\n'
+printf 'sandbox: %s\n' "$SANDBOX"
+printf 'policy : %s\n' "$POLICY"
+printf 'upload : %s -> %s\n' "$UPLOAD" "$WORKDIR"
+[ -n "$IMAGE" ] && printf 'image  : %s\n' "$IMAGE"
+[ -n "$GPU" ] && printf 'gpu    : %s\n' "$GPU"
+[ -n "$PROVIDERS" ] && printf 'providers: %s\n' "$PROVIDERS"
+
+if [ "$#" -gt 0 ]; then
+  args+=(-- "$@")
+fi
+
+exec openshell "${args[@]}"
