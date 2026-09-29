@@ -25,8 +25,8 @@ OpenTelemetry intact while adding a ZyraOS-specific operator surface.
 ## Quick start
 
 ```bash
-./zyra/bin/zyra-doctor
-./zyra/bin/zyra-launch
+bash ./zyra/bin/zyra-doctor
+bash ./zyra/bin/zyra-launch
 ```
 
 The launcher uses OpenShell's normal sandbox and policy machinery. It does not
@@ -55,7 +55,7 @@ configured in OpenShell. Credentials stay behind the OpenShell provider boundary
 To execute a command instead of opening the retained shell:
 
 ```bash
-./zyra/bin/zyra-launch -- python3 --version
+bash ./zyra/bin/zyra-launch -- python3 --version
 ```
 
 ## Capability model
