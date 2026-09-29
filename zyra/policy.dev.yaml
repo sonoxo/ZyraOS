@@ -22,14 +22,24 @@ landlock:
   compatibility: best_effort
 
 network_policies:
-  github_web:
-    name: github-web
+  github_git:
+    name: github-git-read
     endpoints:
       - host: github.com
         port: 443
         protocol: rest
         enforcement: enforce
-        access: read-only
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/**/git-upload-pack" }
+    binaries:
+      - path: /usr/bin/git
+      - path: /usr/lib/git-core/git-remote-http
+      - path: /usr/lib/git-core/git-remote-https
+
+  github_raw:
+    name: github-raw
+    endpoints:
       - host: raw.githubusercontent.com
         port: 443
         protocol: rest
@@ -37,9 +47,9 @@ network_policies:
         access: read-only
     binaries:
       - path: /usr/bin/curl
-      - path: /usr/bin/git
-      - path: /usr/lib/git-core/git-remote-http
-      - path: /usr/lib/git-core/git-remote-https
+      - path: /usr/bin/python3
+      - path: /usr/local/bin/python
+      - path: /usr/local/bin/python3
 
   github_api:
     name: github-api
