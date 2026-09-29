@@ -1,0 +1,51 @@
+name: ZyraOS Overlay
+
+on:
+  pull_request:
+    paths:
+      - "zyra/**"
+      - ".github/workflows/zyra-overlay.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "zyra/**"
+      - ".github/workflows/zyra-overlay.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax
+        run: |
+          bash -n zyra/bin/zyra-doctor
+          bash -n zyra/bin/zyra-launch
+
+      - name: Parse YAML
+        run: |
+          python3 -m pip install --disable-pip-version-check pyyaml==6.0.2
+          python3 - <<'PY'
+          import pathlib
+          import yaml
+
+          for path in (
+              pathlib.Path("zyra/capabilities.yaml"),
+              pathlib.Path("zyra/policy.dev.yaml"),
+          ):
+              with path.open("r", encoding="utf-8") as handle:
+                  yaml.safe_load(handle)
+              print(f"validated {path}")
+          PY
+
+      - name: Overlay structure
+        run: |
+          test -s zyra/README.md
+          test -s zyra/capabilities.yaml
+          test -s zyra/policy.dev.yaml
+          grep -q "human_authority: true" zyra/capabilities.yaml
+          grep -q "enforcement: enforce" zyra/policy.dev.yaml

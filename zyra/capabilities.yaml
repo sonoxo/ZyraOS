@@ -1,0 +1,57 @@
+version: 1
+name: ZyraOS
+base_runtime: NVIDIA/OpenShell
+
+principles:
+  human_authority: true
+  policy_enforced: true
+  least_privilege_credentials: true
+  auditable_changes: true
+  upstream_compatible: true
+
+capabilities:
+  sandboxing:
+    enabled: true
+    features:
+      - filesystem_policy
+      - process_isolation
+      - network_policy
+      - landlock
+      - seccomp
+  orchestration:
+    enabled: true
+    features:
+      - multi_agent_workers
+      - retained_sessions
+      - provider_attachment
+      - hot_network_policy_updates
+  inference:
+    enabled: true
+    optional: true
+    features:
+      - local_inference
+      - provider_backed_inference
+      - gpu_allocation
+  observability:
+    enabled: true
+    features:
+      - ocsf
+      - structured_logs
+      - opentelemetry
+      - policy_denial_events
+  development:
+    enabled: true
+    features:
+      - github_read
+      - zyraos_repo_write
+      - python_packages
+      - node_packages
+      - rust_packages
+      - nvidia_services
+
+operator_commands:
+  doctor: ./zyra/bin/zyra-doctor
+  launch: ./zyra/bin/zyra-launch
+
+policy:
+  development: zyra/policy.dev.yaml
