@@ -1,0 +1,135 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Almighty Sonoxo
+# SPDX-License-Identifier: Apache-2.0
+
+version: 1
+
+filesystem_policy:
+  include_workdir: true
+  read_only:
+    - /usr
+    - /lib
+    - /etc
+    - /proc
+    - /dev/urandom
+    - /app
+    - /var/log
+  read_write:
+    - /sandbox
+    - /tmp
+    - /dev/null
+
+landlock:
+  compatibility: best_effort
+
+network_policies:
+  github_web:
+    name: github-web
+    endpoints:
+      - host: github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+      - host: raw.githubusercontent.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+    binaries:
+      - path: /usr/bin/curl
+      - path: /usr/bin/git
+      - path: /usr/lib/git-core/git-remote-http
+      - path: /usr/lib/git-core/git-remote-https
+
+  github_api:
+    name: github-api
+    endpoints:
+      - host: api.github.com
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        rules:
+          - allow: { method: GET, path: "/**" }
+          - allow: { method: POST, path: "/repos/sonoxo/ZyraOS/**" }
+          - allow: { method: PUT, path: "/repos/sonoxo/ZyraOS/**" }
+          - allow: { method: PATCH, path: "/repos/sonoxo/ZyraOS/**" }
+          - allow: { method: DELETE, path: "/repos/sonoxo/ZyraOS/**" }
+    binaries:
+      - path: /usr/bin/curl
+      - path: /usr/bin/gh
+
+  python_packages:
+    name: python-packages
+    endpoints:
+      - { host: pypi.org, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+      - { host: files.pythonhosted.org, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+    binaries:
+      - { path: /usr/bin/python3 }
+      - { path: /usr/local/bin/python }
+      - { path: /usr/local/bin/python3 }
+      - { path: /usr/local/bin/uv }
+      - { path: /usr/local/bin/pip }
+      - { path: /usr/local/bin/pip3 }
+
+  node_packages:
+    name: node-packages
+    endpoints:
+      - host: registry.npmjs.org
+        port: 443
+        protocol: rest
+        enforcement: enforce
+        access: read-only
+        allow_encoded_slash: true
+    binaries:
+      - { path: /usr/bin/node }
+      - { path: /usr/bin/npm }
+      - { path: /usr/bin/npx }
+      - { path: /usr/local/bin/node }
+      - { path: /usr/local/bin/npm }
+      - { path: /usr/local/bin/npx }
+
+  rust_packages:
+    name: rust-packages
+    endpoints:
+      - { host: crates.io, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+      - { host: static.crates.io, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+      - { host: index.crates.io, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+    binaries:
+      - { path: /usr/bin/cargo }
+      - { path: /usr/local/bin/cargo }
+
+  nvidia:
+    name: nvidia-services
+    endpoints:
+      - { host: api.nvidia.com, port: 443, protocol: rest, enforcement: enforce, access: full }
+      - { host: nvcr.io, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+      - { host: catalog.ngc.nvidia.com, port: 443, protocol: rest, enforcement: enforce, access: read-only }
+    binaries:
+      - { path: /usr/bin/curl }
+      - { path: /usr/bin/python3 }
+      - { path: /usr/local/bin/python }
+      - { path: /usr/local/bin/python3 }
+
+  openai_api:
+    name: openai-api
+    endpoints:
+      - { host: api.openai.com, port: 443, protocol: rest, enforcement: enforce, access: full }
+    binaries:
+      - { path: /usr/bin/curl }
+      - { path: /usr/bin/python3 }
+      - { path: /usr/local/bin/python }
+      - { path: /usr/local/bin/python3 }
+      - { path: /usr/bin/node }
+      - { path: /usr/local/bin/node }
+
+  anthropic_api:
+    name: anthropic-api
+    endpoints:
+      - { host: api.anthropic.com, port: 443, protocol: rest, enforcement: enforce, access: full }
+    binaries:
+      - { path: /usr/bin/curl }
+      - { path: /usr/bin/python3 }
+      - { path: /usr/local/bin/python }
+      - { path: /usr/local/bin/python3 }
+      - { path: /usr/bin/node }
+      - { path: /usr/local/bin/node }
