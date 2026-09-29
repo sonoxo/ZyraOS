@@ -30,7 +30,8 @@ bash ./zyra/bin/zyra-launch
 ```
 
 The launcher uses OpenShell's normal sandbox and policy machinery. It does not
-disable policy enforcement.
+disable policy enforcement. The default upload target is `/sandbox`, which is
+the canonical writable workdir for MicroVM sandboxes.
 
 ### Optional environment variables
 
@@ -42,7 +43,7 @@ export ZYRA_MEMORY=8Gi
 export ZYRA_GPU=1
 export ZYRA_PROVIDERS=github,openai
 export ZYRA_UPLOAD=.
-export ZYRA_WORKDIR=/workspace
+export ZYRA_WORKDIR=/sandbox
 ./zyra/bin/zyra-launch
 ```
 
